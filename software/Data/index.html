@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ESP8266 Controller</title>
+</head>
+
+<body>
+  <h1 class="message">Move a controller</h1>
+  
+  <script src="Joycon.js"></script>
+  <script>
+    function onLoad(event) {
+      initWebSocket();
+    }
+
+    const controllers = Joycon.controllers;
+    const message = document.querySelector('.message');
+    const buttons = Object.values(Joycon.buttonMap);
+    
+    buttons.forEach(button => {
+      controllers.on.press(button, (value) => {
+
+        if (button == "left-trigger"){
+          websocket.send("LSB__" + value.toFixed(2).toString());
+        }
+        if (button == "right-trigger"){
+          websocket.send("RSV__" + value.toFixed(2).toString());
+        }
+
+        if (button == "a"){
+          websocket.send("F1___" + value.toFixed(2).toString());
+        }
+        if (button == "b"){
+          websocket.send("F2___" + value.toFixed(2).toString());
+        }
+        if (button == "x"){
+          websocket.send("F3___" + value.toFixed(2).toString());
+        }
+        if (button == "y"){
+          websocket.send("F4___" + value.toFixed(2).toString());
+        }
+
+        if (button == "dpad-up"){
+          websocket.send("D1___" + value.toFixed(2).toString());
+        }
+        if (button == "dpad-down"){
+          websocket.send("D2___" + value.toFixed(2).toString());
+        }
+        if (button == "dpad-left"){
+          websocket.send("D3___" + value.toFixed(2).toString());
+        }
+        if (button == "dpad-right"){
+          websocket.send("D4___" + value.toFixed(2).toString());
+        }
+
+        if (button == "left-shoulder"){
+          websocket.send("LS___" + value.toFixed(2).toString());
+        }
+        if (button == "right-shoulder"){
+          websocket.send("RS___" + value.toFixed(2).toString());
+        }
+        if (button == "left-joystick"){
+          websocket.send("LAB__" + value.toFixed(2).toString());
+        }
+        if (button == "right-joystick"){
+          websocket.send("RAB__" + value.toFixed(2).toString());
+        }
+
+        if (button == "start"){
+          websocket.send("ST___" + value.toFixed(2).toString());
+        }
+        if (button == "select"){
+          websocket.send("SL___" + value.toFixed(2).toString());
+        }
+        if (button == "home"){
+          websocket.send("H____" + value.toFixed(2).toString());
+        }
+        
+      });  
+    });
+    
+    controllers.on.move('left-joystick', (value) => {      
+      websocket.send("LAS_X" + value.x.toFixed(2).toString());
+      websocket.send("LAS_Y" + value.y.toFixed(2).toString());   
+    });
+    
+    controllers.on.move('right-joystick', (value) => {
+      websocket.send("RAS_X" + value.x.toFixed(2).toString());
+      websocket.send("RAS_Y" + value.y.toFixed(2).toString());      
+    });
+    
+    controllers.on.connect((controller) => {
+      console.log('Controller connected!', controller);
+      message.textContent = 'Controller connected';
+      rumbleButtons.classList.remove('disabled');
+    });
+    
+    controllers.on.disconnect((controller) => {
+      console.log('Controller disconnected!', controller);
+      message.textContent = 'Controller disconnected';
+      if (Object.keys(Joycon.controller).length === 0) { 
+        rumbleButtons.classList.add('disabled');
+      }
+    });
+
+    var gateway = `ws://${window.location.host}/ws`; // <-- JEDYNA zmiana dla ESP8266
+    var websocket;
+
+    window.addEventListener('load', onLoad);
+
+    function initWebSocket() {
+      console.log('Trying to open a WebSocket connection...');
+      websocket = new WebSocket(gateway);
+      websocket.onopen    = onOpen;
+      websocket.onclose   = onClose;
+      websocket.onmessage = onMessage;
+    }
+
+    function onOpen(event) {
+      console.log('Connection opened');
+    }
+
+    function onClose(event) {
+      console.log('Connection closed');
+      setTimeout(initWebSocket, 2000);
+    }
+
+    var data;
+
+    function onMessage(event) {
+      console.log(event.data);
+      data = event.data;
+    }
+
+    var i = setInterval(function(){
+        controllers.vibrate(Number(data)/100, Number(data)/100, 100);
+    }, 100);
+    
+  </script>
+</body>
+</html>
